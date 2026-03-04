@@ -68,3 +68,68 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+// ─── Phase 2: Game Data & Browse ─────────────────────────────────────────────
+
+model Game {
+  id              String    @id @default(cuid())
+  rawgId          Int?      @unique
+  title           String
+  slug            String    @unique
+  description     String?   @db.Text
+  coverUrl        String?
+  releaseDate     DateTime?
+  developer       String?
+  publisher       String?
+  avgRating       Float     @default(0.0)
+  totalRatings    Int       @default(0)
+  isUserSubmitted Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  genres    GameGenre[]
+  platforms GamePlatform[]
+
+  @@index([slug])
+  @@index([rawgId])
+  @@index([avgRating])
+}
+
+model Genre {
+  id   String @id @default(cuid())
+  name String
+  slug String @unique
+
+  games GameGenre[]
+}
+
+model Platform {
+  id           String @id @default(cuid())
+  name         String
+  slug         String @unique
+  abbreviation String?
+
+  games GamePlatform[]
+}
+
+model GameGenre {
+  gameId  String
+  genreId String
+
+  game  Game  @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, genreId])
+  @@index([gameId])
+}
+
+model GamePlatform {
+  gameId     String
+  platformId String
+
+  game     Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, platformId])
+  @@index([gameId])
+}

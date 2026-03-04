@@ -6,7 +6,7 @@ GameShelf is a full-stack gaming community platform where users track their game
 
 **Core value props:**
 
-- Search and browse games via IGDB API (with manual submission fallback)
+- Search and browse games via RAWG API (with manual submission fallback)
 - Personal library with statuses: Playing, Completed, Backlog, Dropped, Wishlist
 - Half-star ratings (0.5–5.0) and written reviews with markdown
 - Community forums with game-specific discussion boards
@@ -25,7 +25,7 @@ GameShelf is a full-stack gaming community platform where users track their game
 | ORM | **Prisma** | Type-safe queries. Use Prisma Client extensions where useful. |
 | Database | **Neon** (PostgreSQL) | Serverless Postgres. Use connection pooling via Neon's pooler URL. |
 | Validation | **Zod** | Shared schemas for forms and API input validation. |
-| External API | **IGDB** (via Twitch OAuth2) | Game search, metadata, cover art. Cache locally in DB. |
+| External API | **RAWG** (API key) | Game search, metadata, cover art. Cache locally in DB. Free tier at rawg.io/apidocs. |
 | Image hosting | **Cloudinary** | Avatars and user-submitted game covers. |
 | Markdown | **react-markdown** + **remark-gfm** | For reviews and forum posts. Sanitise output. |
 
@@ -76,7 +76,7 @@ NextAuth v5 with the Prisma adapter. Session strategy: JWT (works well with Neon
 
 **User** — id, email, username, passwordHash, displayName, bio, avatarUrl, isAdmin, createdAt, updatedAt
 
-**Game** — id, igdbId (nullable, unique), title, slug (unique), description, coverUrl, releaseDate, developer, publisher, avgRating, totalRatings, isUserSubmitted, createdAt, updatedAt
+**Game** — id, rawgId (nullable, unique), title, slug (unique), description, coverUrl, releaseDate, developer, publisher, avgRating, totalRatings, isUserSubmitted, createdAt, updatedAt
 
 **Genre** — id, name, slug (unique)
 
@@ -102,7 +102,7 @@ NextAuth v5 with the Prisma adapter. Session strategy: JWT (works well with Neon
 
 ### Key indexes
 
-- Game: index on slug, igdbId, avgRating
+- Game: index on slug, rawgId, avgRating
 - LibraryEntry: index on userId+status, gameId
 - Review: index on gameId+createdAt
 - ForumThread: index on categoryId+lastReplyAt, gameId
@@ -120,27 +120,23 @@ NextAuth v5 with the Prisma adapter. Session strategy: JWT (works well with Neon
 
 ---
 
-## IGDB Integration
+## RAWG Integration
 
-### Auth flow
+### Auth
 
-IGDB requires Twitch OAuth2. Obtain a client credentials token (app-level, not user-level) from `https://id.twitch.tv/oauth2/token`. Cache the access token in memory or a short-lived variable — tokens last ~60 days.
+RAWG uses a simple API key — no OAuth required. Obtain a free key at `https://rawg.io/apidocs`. Pass as `?key=YOUR_KEY` on every request. Set `RAWG_API_KEY` in `.env`.
 
 ### Search flow
 
 1. Client hits `/api/games/search?q=<term>`
 2. Route handler queries local DB first (`WHERE title ILIKE '%term%'`)
-3. Also queries IGDB API: `POST https://api.igdb.com/v4/games` with body `search "<term>"; fields name,slug,cover.*,first_release_date,genres.*,platforms.*,involved_companies.*,summary; limit 10;`
-4. Merge results, deduplicate by igdbId, return combined list
-5. When user visits a game detail page, if the game only exists as an IGDB result (not yet in local DB), fetch full details and persist to local DB
-
-### Rate limits
-
-IGDB allows 4 requests/second. Implement a simple in-memory rate limiter in the IGDB service module. Batch requests where possible.
+3. Also queries RAWG: `GET https://api.rawg.io/api/games?search=<term>&page_size=10&key=...`
+4. Merge results, deduplicate by rawgId, return combined list
+5. When user visits a game detail page, if the game only exists as a RAWG result (not yet in local DB), fetch full details via `GET /games/{slug}` and persist to local DB
 
 ### Manual fallback
 
-If a game doesn't exist in IGDB (common for very indie or retro titles), users can submit it manually via a form. These entries have `igdbId: null` and `isUserSubmitted: true`. Require at minimum: title, description, and optionally a cover image upload (Cloudinary).
+If a game doesn't exist in RAWG, users can submit it manually via `/games/submit`. These entries have `rawgId: null` and `isUserSubmitted: true`. Requires title and description; cover URL is optional.
 
 ---
 
@@ -192,7 +188,7 @@ gameshelf/
 ├── lib/
 │   ├── prisma.ts                  # Singleton Prisma client
 │   ├── auth.ts                    # NextAuth config
-│   ├── igdb.ts                    # IGDB API wrapper
+│   ├── rawg.ts                    # RAWG API wrapper
 │   ├── cloudinary.ts              # Upload helpers
 │   ├── utils.ts                   # General helpers (cn, formatDate, slugify)
 │   └── validators/                # Zod schemas
@@ -275,14 +271,14 @@ Each phase is a self-contained vertical slice that can be tested end-to-end befo
 
 **Schema:** Game, Genre, Platform, GameGenre, GamePlatform tables
 
-- [ ] IGDB service module (`lib/igdb.ts`) — Twitch OAuth2 token management, search endpoint, game detail fetch, rate limiter
-- [ ] `GET /api/games/search?q=` — searches local DB + IGDB, returns merged results
-- [ ] Game detail page `/games/[slug]` — server component fetches from local DB; if not found, fetches from IGDB and persists
-- [ ] Game card component — cover image, title, rating badge, genres
-- [ ] Games browse page `/games` — server-rendered grid with genre/platform filters and sorting (top rated, newest, alphabetical)
-- [ ] Search bar in navbar — client component with debounced input, hits search API, shows dropdown results
-- [ ] Manual game submission form `/games/submit` (protected) — title, description, cover upload, genre/platform selectors
-- [ ] Verify: search for "The Witcher 3" → see results from IGDB → click through to detail page → data persisted in local DB
+- [x] RAWG service module (`lib/rawg.ts`) — API key auth, search endpoint, game detail fetch
+- [x] `GET /api/games/search?q=` — searches local DB + RAWG, returns merged results
+- [x] Game detail page `/games/[slug]` — server component fetches from local DB; if not found, fetches from RAWG and persists
+- [x] Game card component — cover image, title, rating badge, genres
+- [x] Games browse page `/games` — server-rendered grid with genre/platform filters and sorting (top rated, newest, alphabetical)
+- [x] Search bar in navbar — client component with debounced input, hits search API, shows dropdown results
+- [x] Manual game submission form `/games/submit` (protected) — title, description, cover URL, genre/platform selectors
+- [x] Verify: search for "The Witcher 3" → see results from RAWG → click through to detail page → data persisted in local DB
 
 ---
 

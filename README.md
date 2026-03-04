@@ -4,7 +4,7 @@ A full-stack gaming community platform. Track your game library, write reviews, 
 
 ## Features
 
-- Browse and search games via the [IGDB](https://www.igdb.com/) API
+- Browse and search games via the [RAWG](https://rawg.io/) API
 - Personal library with statuses: Playing, Completed, Backlog, Dropped, Wishlist
 - Half-star ratings and written reviews with markdown
 - Community forums with game-specific discussion boards
@@ -23,7 +23,7 @@ A full-stack gaming community platform. Track your game library, write reviews, 
 | Database | Neon (PostgreSQL) |
 | Validation | Zod |
 | Email | Resend |
-| External API | IGDB (via Twitch OAuth2) |
+| External API | RAWG (API key) |
 | Image hosting | Cloudinary |
 
 ## Getting Started
@@ -89,8 +89,7 @@ Then set both `DATABASE_URL` and `DIRECT_URL` in `.env` to the local Docker conn
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `RESEND_API_KEY` | [Resend](https://resend.com) API key for transactional email |
 | `RESEND_FROM_EMAIL` | From address (e.g. `GameShelf <noreply@yourdomain.com>`) |
-| `TWITCH_CLIENT_ID` | Twitch app client ID (for IGDB access) |
-| `TWITCH_CLIENT_SECRET` | Twitch app client secret |
+| `RAWG_API_KEY` | [RAWG](https://rawg.io/apidocs) API key (free, no 2FA required) |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
@@ -130,7 +129,7 @@ lib/
   auth.ts          # NextAuth config
   prisma.ts        # Prisma client singleton
   email.ts         # Resend email helpers
-  igdb.ts          # IGDB API wrapper
+  rawg.ts          # RAWG API wrapper
   utils.ts         # cn(), slugify(), formatDate()
   validators/      # Zod schemas
 actions/           # Server actions

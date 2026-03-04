@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NavbarClient } from "./navbar-client";
+import { SearchBar } from "./search-bar";
 
 export async function Navbar() {
   const session = await getServerSession(authOptions);
@@ -32,7 +33,10 @@ export async function Navbar() {
           </nav>
         </div>
 
-        <NavbarClient session={session} />
+        <div className="flex items-center gap-4">
+          <SearchBar />
+          <NavbarClient session={session} />
+        </div>
       </div>
     </header>
   );

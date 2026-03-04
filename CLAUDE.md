@@ -62,7 +62,7 @@ Phases are defined in ARCHITECTURE.md. Work through them in order — each is a 
 Phase summary:
 0. Scaffold & infrastructure
 1. Auth & user profile
-2. Game data & browse (IGDB integration)
+2. Game data & browse (RAWG API integration)
 3. Library & ratings
 4. Reviews
 5. Forums
@@ -72,8 +72,7 @@ Phase summary:
 ## Key Gotchas
 
 - Neon connections can drop on cold starts — the Prisma singleton in `lib/prisma.ts` should handle reconnection.
-- IGDB requires Twitch OAuth2 client credentials. Token lasts ~60 days — cache in memory, refresh on 401.
-- IGDB rate limit: 4 requests/second. The `lib/igdb.ts` module must rate-limit outgoing requests.
+- RAWG API uses a simple API key (`RAWG_API_KEY`). No OAuth. Free tier at rawg.io/apidocs. The wrapper lives in `lib/rawg.ts`.
 - NextAuth v5 imports from `next-auth` (not `next-auth/react` for server-side). Check Auth.js docs if unsure.
 - Image optimization: always use `next/image` for game covers and avatars.
 - `.env.example` must stay up to date with every required variable.
