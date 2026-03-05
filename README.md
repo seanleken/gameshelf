@@ -4,7 +4,6 @@ A full-stack gaming community platform. Track your game library, write reviews, 
 
 ## Features
 
-- Browse and search games via the [RAWG](https://rawg.io/) API, with local DB caching
 - Personal library with statuses: Playing, Completed, Backlog, Dropped, Wishlist
 - Half-star ratings and written reviews with markdown and spoiler toggle
 - Community forums with nested replies and accepted answers
@@ -91,7 +90,7 @@ Then set both `DATABASE_URL` and `DIRECT_URL` in `.env` to the local Docker conn
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `RESEND_API_KEY` | [Resend](https://resend.com) API key for transactional email |
 | `RESEND_FROM_EMAIL` | From address (e.g. `GameShelf <noreply@yourdomain.com>`) |
-| `RAWG_API_KEY` | [RAWG](https://rawg.io/apidocs) API key (free, no 2FA required) |
+| `RAWG_API_KEY` | RAWG API key (free, no 2FA required) |
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
 | `CLOUDINARY_API_KEY` | Cloudinary API key |
 | `CLOUDINARY_API_SECRET` | Cloudinary API secret |
