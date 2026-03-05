@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Avatar } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 import { EditProfileModal } from "./edit-profile-modal";
+import { getPublicLibraryPreview } from "@/lib/services/library";
+import { StarRating } from "@/components/game/star-rating";
 import type { Metadata } from "next";
 
 interface Props {
@@ -34,6 +38,7 @@ export default async function UserProfilePage({ params }: Props) {
   if (!user) notFound();
 
   const isOwner = session?.user?.id === user.id;
+  const libraryPreview = await getPublicLibraryPreview(user.id);
 
   return (
     <div className="mx-auto max-w-2xl py-8">
@@ -59,11 +64,55 @@ export default async function UserProfilePage({ params }: Props) {
         </div>
       </div>
 
-      {/* Placeholder tabs — filled in later phases */}
+      {/* Library preview */}
       <div className="mt-10 border-t border-subtle pt-8">
-        <p className="text-text-tertiary text-sm">
-          Library, reviews, and activity will appear here in upcoming phases.
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-text-primary font-semibold">
+            {isOwner ? "My Shelf" : `${user.displayName ?? user.username}'s Shelf`}
+          </h2>
+          {isOwner && (
+            <Link href="/library" className="text-sm text-accent hover:text-accent-hover transition-colors">
+              View all →
+            </Link>
+          )}
+        </div>
+
+        {libraryPreview.length === 0 ? (
+          <p className="text-text-tertiary text-sm">
+            {isOwner ? "Your shelf is empty. Browse games to start tracking!" : "No games on shelf yet."}
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+            {libraryPreview.map((entry) => (
+              <Link
+                key={entry.id}
+                href={`/games/${entry.game.slug}`}
+                className="group block"
+              >
+                <div className="relative aspect-[3/4] w-full rounded-lg overflow-hidden bg-bg-elevated border border-subtle group-hover:border-accent/30 transition-colors">
+                  {entry.game.coverUrl ? (
+                    <Image
+                      src={entry.game.coverUrl}
+                      alt={entry.game.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 16vw"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-2">
+                      <span className="text-text-tertiary text-[10px] text-center">{entry.game.title}</span>
+                    </div>
+                  )}
+                </div>
+                {entry.rating && (
+                  <div className="mt-1.5">
+                    <StarRating rating={entry.rating} size="sm" showValue={false} />
+                  </div>
+                )}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

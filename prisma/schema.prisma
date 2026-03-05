@@ -30,6 +30,9 @@ model User {
   // NextAuth relations
   accounts Account[]
   sessions Session[]
+
+  // Phase 3
+  libraryEntries LibraryEntry[]
 }
 
 // NextAuth required tables
@@ -87,8 +90,9 @@ model Game {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  genres    GameGenre[]
-  platforms GamePlatform[]
+  genres         GameGenre[]
+  platforms      GamePlatform[]
+  libraryEntries LibraryEntry[]
 
   @@index([slug])
   @@index([rawgId])
@@ -131,5 +135,36 @@ model GamePlatform {
   platform Platform @relation(fields: [platformId], references: [id], onDelete: Cascade)
 
   @@id([gameId, platformId])
+  @@index([gameId])
+}
+
+// ─── Phase 3: Library & Ratings ──────────────────────────────────────────────
+
+enum LibraryStatus {
+  PLAYING
+  COMPLETED
+  BACKLOG
+  DROPPED
+  WISHLIST
+}
+
+model LibraryEntry {
+  id          String        @id @default(cuid())
+  userId      String
+  gameId      String
+  status      LibraryStatus
+  rating      Float?        // 0.5–5.0 in 0.5 increments
+  hoursPlayed Float?
+  platform    String?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@index([userId, status])
   @@index([gameId])
 }

@@ -1,9 +1,14 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import type { Metadata } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { getGameBySlug, persistRawgGame, type GameWithRelations } from "@/lib/services/game";
 import { getRawgGameBySlug } from "@/lib/rawg";
+import { getUserLibraryEntry } from "@/lib/services/library";
 import { StarRating } from "@/components/game/star-rating";
+import { AddToShelfButton } from "@/components/game/add-to-shelf-button";
+import { InlineRating } from "@/components/game/inline-rating";
 import { formatDate } from "@/lib/utils";
 
 interface GamePageProps {
@@ -37,6 +42,12 @@ export default async function GamePage({ params }: GamePageProps) {
 
   if (!game) notFound();
 
+  // 3. Fetch current user's library entry (if logged in)
+  const session = await getServerSession(authOptions);
+  const libraryEntry = session?.user?.id
+    ? await getUserLibraryEntry(session.user.id, game.id)
+    : null;
+
   const genres = game.genres.map((gg) => gg.genre);
   const platforms = game.platforms.map((gp) => gp.platform);
 
@@ -63,14 +74,34 @@ export default async function GamePage({ params }: GamePageProps) {
             )}
           </div>
 
-          {/* Add to Shelf placeholder — Phase 3 */}
-          <div className="hidden lg:block">
-            <button
-              disabled
-              className="w-full bg-accent/20 text-accent border border-accent/30 rounded-lg py-2.5 text-sm font-semibold cursor-not-allowed opacity-60"
-            >
-              Add to Shelf
-            </button>
+          {/* Add to Shelf */}
+          <div className="hidden lg:flex lg:flex-col gap-3">
+            {session ? (
+              <>
+                <AddToShelfButton
+                  gameId={game.id}
+                  initialEntry={
+                    libraryEntry
+                      ? { id: libraryEntry.id, status: libraryEntry.status, rating: libraryEntry.rating }
+                      : null
+                  }
+                />
+                {libraryEntry && (
+                  <InlineRating
+                    gameId={game.id}
+                    status={libraryEntry.status}
+                    initialRating={libraryEntry.rating}
+                  />
+                )}
+              </>
+            ) : (
+              <a
+                href="/login"
+                className="w-full text-center bg-accent/10 text-accent border border-accent/30 rounded-lg py-2.5 text-sm font-semibold hover:bg-accent/20 transition-colors"
+              >
+                Sign in to track
+              </a>
+            )}
           </div>
         </div>
 
