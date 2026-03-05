@@ -7,6 +7,7 @@ import { getGameBySlug, persistRawgGame, type GameWithRelations } from "@/lib/se
 import { getRawgGameBySlug } from "@/lib/rawg";
 import { getUserLibraryEntry } from "@/lib/services/library";
 import { getGameReviews } from "@/lib/services/review";
+import { getGameThreads } from "@/lib/services/forum";
 import { StarRating } from "@/components/game/star-rating";
 import { AddToShelfButton } from "@/components/game/add-to-shelf-button";
 import { InlineRating } from "@/components/game/inline-rating";
@@ -46,9 +47,10 @@ export default async function GamePage({ params }: GamePageProps) {
 
   // 3. Fetch session-dependent data in parallel
   const session = await getServerSession(authOptions);
-  const [libraryEntry, reviews] = await Promise.all([
+  const [libraryEntry, reviews, gameThreads] = await Promise.all([
     session?.user?.id ? getUserLibraryEntry(session.user.id, game.id) : null,
     getGameReviews(game.id),
+    getGameThreads(game.id),
   ]);
 
   const genres = game.genres.map((gg) => gg.genre);
@@ -199,7 +201,9 @@ export default async function GamePage({ params }: GamePageProps) {
 
       <GameTabs
         gameId={game.id}
+        gameSlug={game.slug}
         reviews={reviews}
+        gameThreads={gameThreads}
         currentUserId={session?.user?.id}
         about={
           game.description ? (

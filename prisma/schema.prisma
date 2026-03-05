@@ -37,6 +37,11 @@ model User {
   // Phase 4
   reviews     Review[]
   reviewVotes ReviewVote[]
+
+  // Phase 5
+  forumThreads ForumThread[]
+  forumReplies ForumReply[]
+  replyVotes   ReplyVote[]
 }
 
 // NextAuth required tables
@@ -98,6 +103,7 @@ model Game {
   platforms      GamePlatform[]
   libraryEntries LibraryEntry[]
   reviews        Review[]
+  forumThreads   ForumThread[]
 
   @@index([slug])
   @@index([rawgId])
@@ -205,4 +211,73 @@ model ReviewVote {
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@id([userId, reviewId])
+}
+
+// ─── Phase 5: Forums ─────────────────────────────────────────────────────────
+
+model ForumCategory {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  sortOrder   Int      @default(0)
+  color       String   @default("#e5a837")
+  createdAt   DateTime @default(now())
+
+  threads ForumThread[]
+}
+
+model ForumThread {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  body        String   @db.Text
+  authorId    String
+  categoryId  String
+  gameId      String?
+  isPinned    Boolean  @default(false)
+  isLocked    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lastReplyAt DateTime @default(now())
+
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category ForumCategory @relation(fields: [categoryId], references: [id])
+  game     Game?         @relation(fields: [gameId], references: [id])
+  replies  ForumReply[]
+
+  @@index([categoryId, lastReplyAt])
+  @@index([gameId])
+}
+
+model ForumReply {
+  id               String   @id @default(cuid())
+  body             String   @db.Text
+  authorId         String
+  threadId         String
+  parentId         String?
+  helpfulCount     Int      @default(0)
+  isAcceptedAnswer Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  author   User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread   ForumThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  parent   ForumReply?  @relation("ReplyToReply", fields: [parentId], references: [id])
+  children ForumReply[] @relation("ReplyToReply")
+  votes    ReplyVote[]
+
+  @@index([threadId, createdAt])
+}
+
+model ReplyVote {
+  userId  String
+  replyId String
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reply ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+
+  @@id([userId, replyId])
 }
