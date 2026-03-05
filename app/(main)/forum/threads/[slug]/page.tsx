@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getThreadBySlug, getThreadReplies } from "@/lib/services/forum";
 import { Avatar } from "@/components/ui/avatar";
-import { formatDate, formatRelativeDate } from "@/lib/utils";
+import { formatDate } from "@/lib/utils";
 import { ReplyTree } from "@/components/forum/reply-tree";
 import { ThreadViewCounter } from "@/components/forum/thread-view-counter";
 import ReactMarkdown from "react-markdown";

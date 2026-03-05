@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { formatRelativeDate } from "@/lib/utils";
 import type { CategoryWithCount } from "@/lib/services/forum";
 
 interface ForumCategoryCardProps {

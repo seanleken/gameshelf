@@ -201,7 +201,6 @@ export default async function GamePage({ params }: GamePageProps) {
 
       <GameTabs
         gameId={game.id}
-        gameSlug={game.slug}
         reviews={reviews}
         gameThreads={gameThreads}
         currentUserId={session?.user?.id}

@@ -13,7 +13,6 @@ interface GameTabsProps {
   currentUserId?: string;
   gameId: string;
   gameThreads: ThreadWithMeta[];
-  gameSlug: string;
 }
 
 const TABS = ["About", "Reviews", "Discussions"] as const;
@@ -25,7 +24,6 @@ export function GameTabs({
   currentUserId,
   gameId,
   gameThreads,
-  gameSlug,
 }: GameTabsProps) {
   const [active, setActive] = useState<Tab>("About");
 

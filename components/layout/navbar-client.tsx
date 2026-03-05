@@ -5,7 +5,6 @@ import { signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import { type Session } from "next-auth";
 import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 
 export function NavbarClient({ session }: { session: Session | null }) {
   const [menuOpen, setMenuOpen] = useState(false);

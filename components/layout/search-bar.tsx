@@ -114,8 +114,10 @@ export function SearchBar() {
           onKeyDown={handleKeyDown}
           onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Search games…"
+          role="combobox"
           aria-label="Search games"
           aria-expanded={open}
+          aria-controls="search-results"
           aria-autocomplete="list"
           className="w-full bg-bg-elevated border border-subtle rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-colors"
         />
@@ -129,7 +131,7 @@ export function SearchBar() {
       {/* Dropdown */}
       {open && (
         <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-bg-elevated border border-subtle rounded-card shadow-xl overflow-hidden">
-          <ul role="listbox">
+          <ul id="search-results" role="listbox">
             {results.map((result, i) => (
               <li key={result.slug} role="option" aria-selected={i === activeIndex}>
                 <button
