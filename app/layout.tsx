@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     template: "%s | GameShelf",
   },
   description: "Track your games, share reviews, and connect with other gamers.",
+  openGraph: {
+    siteName: "GameShelf",
+    description: "Track your games, share reviews, and connect with other gamers.",
+  },
 };
 
 export default function RootLayout({

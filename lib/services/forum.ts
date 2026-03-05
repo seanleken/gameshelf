@@ -95,6 +95,15 @@ export async function getThreadReplies(threadId: string): Promise<ReplyWithAutho
   });
 }
 
+export async function searchThreads(q: string, limit = 12): Promise<ThreadWithMeta[]> {
+  return prisma.forumThread.findMany({
+    where: { title: { contains: q, mode: "insensitive" } },
+    include: threadInclude,
+    orderBy: { lastReplyAt: "desc" },
+    take: limit,
+  });
+}
+
 export async function getGameThreads(gameId: string, limit = 5): Promise<ThreadWithMeta[]> {
   return prisma.forumThread.findMany({
     where: { gameId },

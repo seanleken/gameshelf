@@ -18,13 +18,22 @@ interface GamePageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600; // ISR: revalidate game pages every hour
+
 export async function generateMetadata({ params }: GamePageProps): Promise<Metadata> {
   const { slug } = await params;
   const game = await getGameBySlug(slug);
   if (!game) return { title: "Game Not Found — GameShelf" };
+  const description = game.description?.slice(0, 160) ?? `Track ${game.title} in your GameShelf library.`;
   return {
     title: `${game.title} — GameShelf`,
-    description: game.description?.slice(0, 160) ?? undefined,
+    description,
+    openGraph: {
+      title: game.title,
+      description,
+      images: game.coverUrl ? [{ url: game.coverUrl, width: 600, height: 800, alt: game.title }] : [],
+      type: "website",
+    },
   };
 }
 

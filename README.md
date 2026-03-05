@@ -4,11 +4,13 @@ A full-stack gaming community platform. Track your game library, write reviews, 
 
 ## Features
 
-- Browse and search games via the [RAWG](https://rawg.io/) API
+- Browse and search games via the [RAWG](https://rawg.io/) API, with local DB caching
 - Personal library with statuses: Playing, Completed, Backlog, Dropped, Wishlist
-- Half-star ratings and written reviews with markdown
-- Community forums with game-specific discussion boards
-- Follow system with activity feed
+- Half-star ratings and written reviews with markdown and spoiler toggle
+- Community forums with nested replies and accepted answers
+- Follow system with personalized activity feed
+- Global search across games, users, and forum threads
+- User profiles with library stats (completion count, avg rating, top genre)
 - Credentials and Google OAuth authentication with email verification
 
 ## Tech Stack
@@ -96,6 +98,16 @@ Then set both `DATABASE_URL` and `DIRECT_URL` in `.env` to the local Docker conn
 
 See `.env.example` for a full template.
 
+## Seed Data
+
+The seed script creates sample users, games, library entries, reviews, forum threads, and follow relationships for local development:
+
+```bash
+npx prisma db seed
+```
+
+Sample users are created with password `password123`. Games are seeded with cover art URLs from IGDB.
+
 ## Scripts
 
 ```bash
@@ -115,26 +127,34 @@ npx prisma generate                           # Regenerate Prisma client
 app/
   (auth)/          # Login, register, verify email, password reset
   (main)/          # Main app layout with navbar
+    page.tsx       # Home — trending, top rated, community activity
     games/         # Browse and game detail pages
     library/       # User's personal shelf
     forum/         # Community forums
-    users/         # Public profiles
-    feed/          # Activity feed
+    users/         # Public profiles with stats
+    feed/          # Personalized activity feed
+    search/        # Global search (games, users, threads)
   api/             # Route handlers (search, auth callback)
 components/
   ui/              # Primitives: Button, Input, Avatar, etc.
   game/            # GameCard, StarRating, AddToShelfButton
-  layout/          # Navbar, Footer
+  review/          # ReviewCard, ReviewForm
+  forum/           # ThreadCard, ReplyTree, ThreadForm
+  social/          # FollowButton, ActivityFeedItem
+  layout/          # Navbar, SearchBar, Footer
 lib/
   auth.ts          # NextAuth config
   prisma.ts        # Prisma client singleton
   email.ts         # Resend email helpers
   rawg.ts          # RAWG API wrapper
   utils.ts         # cn(), slugify(), formatDate()
+  services/        # Data access layer (game, user, library, review, forum, social)
   validators/      # Zod schemas
-actions/           # Server actions
+actions/           # Server actions (library, reviews, forum, social, auth)
+types/             # Shared TypeScript types
 prisma/
   schema.prisma    # Database schema
+  seed.ts          # Sample data
   migrations/      # Migration history
 ```
 

@@ -110,6 +110,58 @@ export async function getGameById(id: string): Promise<{ id: string; title: stri
   });
 }
 
+export async function getTrendingGames(limit = 8): Promise<GameSearchResult[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+
+  const topIds = await prisma.libraryEntry.groupBy({
+    by: ["gameId"],
+    where: { createdAt: { gte: since } },
+    _count: { gameId: true },
+    orderBy: { _count: { gameId: "desc" } },
+    take: limit,
+  });
+
+  if (topIds.length === 0) return getTopRatedGames(limit);
+
+  const games = await prisma.game.findMany({
+    where: { id: { in: topIds.map((g) => g.gameId) } },
+    include: { genres: { include: { genre: true } } },
+  });
+
+  const countMap = new Map(topIds.map((g) => [g.gameId, g._count.gameId]));
+  return games
+    .sort((a, b) => (countMap.get(b.id) ?? 0) - (countMap.get(a.id) ?? 0))
+    .map((g) => ({
+      id: g.id,
+      rawgId: g.rawgId,
+      title: g.title,
+      slug: g.slug,
+      coverUrl: g.coverUrl,
+      releaseDate: g.releaseDate,
+      genres: g.genres.map((gg: { genre: Genre }) => ({ name: gg.genre.name })),
+    }));
+}
+
+export async function getTopRatedGames(limit = 8): Promise<GameSearchResult[]> {
+  const games = await prisma.game.findMany({
+    where: { totalRatings: { gte: 2 }, avgRating: { gt: 0 } },
+    orderBy: [{ avgRating: "desc" }, { totalRatings: "desc" }],
+    take: limit,
+    include: { genres: { include: { genre: true } } },
+  });
+
+  return games.map((g) => ({
+    id: g.id,
+    rawgId: g.rawgId,
+    title: g.title,
+    slug: g.slug,
+    coverUrl: g.coverUrl,
+    releaseDate: g.releaseDate,
+    genres: g.genres.map((gg: { genre: Genre }) => ({ name: gg.genre.name })),
+  }));
+}
+
 export async function getAllGenres(): Promise<Genre[]> {
   return prisma.genre.findMany({ orderBy: { name: "asc" } });
 }
