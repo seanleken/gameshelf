@@ -9,6 +9,7 @@ import {
   deleteReviewSchema,
   toggleHelpfulSchema,
 } from "@/lib/validators/review";
+import { recordActivity } from "@/lib/services/activity";
 
 async function requireSession() {
   const session = await getServerSession(authOptions);
@@ -19,7 +20,7 @@ async function requireSession() {
 const reviewInclude = {
   user: { select: { id: true, username: true, displayName: true, avatarUrl: true } },
   votes: { select: { userId: true } },
-  game: { select: { slug: true, title: true } },
+  game: { select: { slug: true, title: true, coverUrl: true } },
 } as const;
 
 export async function createReview(raw: unknown) {
@@ -36,6 +37,21 @@ export async function createReview(raw: unknown) {
       containsSpoilers: input.containsSpoilers,
     },
     include: reviewInclude,
+  });
+
+  await recordActivity({
+    userId,
+    type: "REVIEWED",
+    targetId: review.id,
+    targetType: "review",
+    metadata: {
+      gameId: input.gameId,
+      gameTitle: review.game.title,
+      gameSlug: review.game.slug,
+      gameCoverUrl: review.game.coverUrl,
+      reviewTitle: input.title,
+      reviewRating: input.rating,
+    },
   });
 
   return { success: true as const, review };

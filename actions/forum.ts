@@ -16,6 +16,7 @@ import {
   markAcceptedSchema,
 } from "@/lib/validators/forum";
 import { getThreadReplies, type ReplyWithAuthor } from "@/lib/services/forum";
+import { recordActivity } from "@/lib/services/activity";
 
 async function requireSession() {
   const session = await getServerSession(authOptions);
@@ -55,6 +56,20 @@ export async function createThread(raw: unknown) {
       category: { select: { id: true, name: true, slug: true, color: true } },
       game: { select: { id: true, title: true, slug: true, coverUrl: true } },
       _count: { select: { replies: true } },
+    },
+  });
+
+  await recordActivity({
+    userId,
+    type: "THREAD_CREATED",
+    targetId: thread.id,
+    targetType: "thread",
+    metadata: {
+      threadTitle: thread.title,
+      threadSlug: thread.slug,
+      categoryName: thread.category.name,
+      categorySlug: thread.category.slug,
+      categoryColor: thread.category.color,
     },
   });
 

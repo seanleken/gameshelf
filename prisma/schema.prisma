@@ -42,6 +42,11 @@ model User {
   forumThreads ForumThread[]
   forumReplies ForumReply[]
   replyVotes   ReplyVote[]
+
+  // Phase 6
+  following      Follow[]        @relation("Following")
+  followers      Follow[]        @relation("Followers")
+  activityEvents ActivityEvent[]
 }
 
 // NextAuth required tables
@@ -280,4 +285,41 @@ model ReplyVote {
   reply ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
 
   @@id([userId, replyId])
+}
+
+// ─── Phase 6: Social & Activity Feed ─────────────────────────────────────────
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+enum ActivityEventType {
+  ADDED_GAME
+  REVIEWED
+  COMPLETED
+  STARTED_PLAYING
+  THREAD_CREATED
+}
+
+model ActivityEvent {
+  id         String            @id @default(cuid())
+  userId     String
+  type       ActivityEventType
+  targetId   String
+  targetType String
+  metadata   Json?
+  createdAt  DateTime          @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

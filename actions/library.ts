@@ -8,6 +8,7 @@ import {
   upsertLibraryEntrySchema,
   deleteLibraryEntrySchema,
 } from "@/lib/validators/library";
+import { recordActivity } from "@/lib/services/activity";
 
 async function requireSession() {
   const session = await getServerSession(authOptions);
@@ -36,6 +37,17 @@ export async function upsertLibraryEntry(raw: unknown) {
   const userId = await requireSession();
   const input = upsertLibraryEntrySchema.parse(raw);
 
+  const [existing, game] = await Promise.all([
+    prisma.libraryEntry.findUnique({
+      where: { userId_gameId: { userId, gameId: input.gameId } },
+      select: { status: true },
+    }),
+    prisma.game.findUnique({
+      where: { id: input.gameId },
+      select: { title: true, slug: true, coverUrl: true },
+    }),
+  ]);
+
   const result = await prisma.$transaction(async (tx) => {
     const entry = await tx.libraryEntry.upsert({
       where: { userId_gameId: { userId, gameId: input.gameId } },
@@ -54,6 +66,22 @@ export async function upsertLibraryEntry(raw: unknown) {
     await recalcGameRating(tx, input.gameId);
     return entry;
   });
+
+  if (game) {
+    const gameMeta = {
+      gameId: input.gameId,
+      gameTitle: game.title,
+      gameSlug: game.slug,
+      gameCoverUrl: game.coverUrl,
+    };
+    if (!existing) {
+      await recordActivity({ userId, type: "ADDED_GAME", targetId: input.gameId, targetType: "game", metadata: gameMeta });
+    } else if (input.status === "COMPLETED" && existing.status !== "COMPLETED") {
+      await recordActivity({ userId, type: "COMPLETED", targetId: input.gameId, targetType: "game", metadata: gameMeta });
+    } else if (input.status === "PLAYING" && existing.status !== "PLAYING") {
+      await recordActivity({ userId, type: "STARTED_PLAYING", targetId: input.gameId, targetType: "game", metadata: gameMeta });
+    }
+  }
 
   revalidatePath(`/library`);
   revalidatePath(`/games`);

@@ -5,7 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { StarRating } from "@/components/game/star-rating";
 import { ReviewCard } from "@/components/review/review-card";
+import { ActivityFeedItem } from "@/components/social/activity-feed-item";
 import type { ReviewWithUser } from "@/lib/services/review";
+import type { FeedEvent } from "@/lib/services/social";
 
 type LibraryEntry = {
   id: string;
@@ -15,22 +17,22 @@ type LibraryEntry = {
 
 interface ProfileTabsProps {
   isOwner: boolean;
-  username: string;
   displayName: string;
   libraryPreview: LibraryEntry[];
   reviews: ReviewWithUser[];
+  activity: FeedEvent[];
   currentUserId?: string;
 }
 
-const TABS = ["Shelf", "Reviews"] as const;
+const TABS = ["Shelf", "Reviews", "Activity"] as const;
 type Tab = typeof TABS[number];
 
 export function ProfileTabs({
   isOwner,
-  username,
   displayName,
   libraryPreview,
   reviews,
+  activity,
   currentUserId,
 }: ProfileTabsProps) {
   const [active, setActive] = useState<Tab>("Shelf");
@@ -123,6 +125,21 @@ export function ProfileTabs({
                 currentUserId={currentUserId}
                 showGame
               />
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Activity tab */}
+      {active === "Activity" && (
+        <div>
+          {activity.length === 0 ? (
+            <p className="text-text-tertiary text-sm">
+              {isOwner ? "No activity yet." : `${displayName} hasn't done anything yet.`}
+            </p>
+          ) : (
+            activity.map((event) => (
+              <ActivityFeedItem key={event.id} event={event} />
             ))
           )}
         </div>
