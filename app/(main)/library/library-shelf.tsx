@@ -4,7 +4,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import type { LibraryStatus } from "@prisma/client";
+import type { LibraryStatus } from "@/types/library";
 import type { LibraryEntryWithGame } from "@/lib/services/library";
 import { StarRating } from "@/components/game/star-rating";
 

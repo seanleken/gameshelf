@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LibraryStatus } from "@prisma/client";
+import type { LibraryStatus } from "@/types/library";
 import { upsertLibraryEntry, deleteLibraryEntry } from "@/actions/library";
 
 export type ShelfEntry = {

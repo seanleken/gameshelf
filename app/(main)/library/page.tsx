@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getUserLibrary, getLibraryEntryCounts } from "@/lib/services/library";
 import { LibraryShelf } from "./library-shelf";
-import type { LibraryStatus } from "@prisma/client";
+import type { LibraryStatus } from "@/types/library";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = { title: "My Shelf — GameShelf" };

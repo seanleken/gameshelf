@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { StarRatingInput } from "./star-rating";
 import { upsertLibraryEntry } from "@/actions/library";
-import type { LibraryStatus } from "@prisma/client";
+import type { LibraryStatus } from "@/types/library";
 
 interface InlineRatingProps {
   gameId: string;

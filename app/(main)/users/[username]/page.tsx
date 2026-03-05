@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { getUserByUsername } from "@/lib/services/user";
 import { Avatar } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 import { EditProfileModal } from "./edit-profile-modal";
@@ -20,17 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function UserProfilePage({ params }: Props) {
   const [user, session] = await Promise.all([
-    prisma.user.findUnique({
-      where: { username: params.username },
-      select: {
-        id: true,
-        username: true,
-        displayName: true,
-        bio: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
-    }),
+    getUserByUsername(params.username),
     getServerSession(authOptions),
   ]);
 

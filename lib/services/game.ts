@@ -103,6 +103,13 @@ export async function getBrowseGames({
   return { games, total };
 }
 
+export async function getGameById(id: string): Promise<{ id: string; title: string } | null> {
+  return prisma.game.findUnique({
+    where: { id },
+    select: { id: true, title: true },
+  });
+}
+
 export async function getAllGenres(): Promise<Genre[]> {
   return prisma.genre.findMany({ orderBy: { name: "asc" } });
 }

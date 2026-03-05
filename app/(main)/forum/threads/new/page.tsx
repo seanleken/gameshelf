@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getForumCategories } from "@/lib/services/forum";
-import { prisma } from "@/lib/prisma";
+import { getGameById } from "@/lib/services/game";
 import { ThreadForm } from "@/components/forum/thread-form";
 
 export const metadata = {
@@ -23,7 +23,7 @@ export default async function NewThreadPage({ searchParams }: Props) {
   const [categories, game] = await Promise.all([
     getForumCategories(),
     gameId
-      ? prisma.game.findUnique({ where: { id: gameId }, select: { id: true, title: true } })
+      ? getGameById(gameId)
       : Promise.resolve(null),
   ]);
 
