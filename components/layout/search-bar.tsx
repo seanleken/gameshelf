@@ -20,7 +20,6 @@ export function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [navigating, setNavigating] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,7 +65,6 @@ export function SearchBar() {
   const navigate = useCallback(
     (result: SearchResult) => {
       setOpen(false);
-      setNavigating(true);
       router.push(`/games/${result.slug}`);
     },
     [router]
@@ -121,7 +119,7 @@ export function SearchBar() {
           aria-autocomplete="list"
           className="w-full bg-bg-elevated border border-subtle rounded-lg pl-9 pr-3 py-2 text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50 transition-colors"
         />
-        {(loading || navigating) && (
+        {(loading) && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
             <div className="w-3.5 h-3.5 border-2 border-accent/40 border-t-accent rounded-full animate-spin" />
           </div>

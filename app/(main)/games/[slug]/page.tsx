@@ -6,9 +6,11 @@ import { authOptions } from "@/lib/auth";
 import { getGameBySlug, persistRawgGame, type GameWithRelations } from "@/lib/services/game";
 import { getRawgGameBySlug } from "@/lib/rawg";
 import { getUserLibraryEntry } from "@/lib/services/library";
+import { getGameReviews } from "@/lib/services/review";
 import { StarRating } from "@/components/game/star-rating";
 import { AddToShelfButton } from "@/components/game/add-to-shelf-button";
 import { InlineRating } from "@/components/game/inline-rating";
+import { GameTabs } from "@/components/game/game-tabs";
 import { formatDate } from "@/lib/utils";
 
 interface GamePageProps {
@@ -42,11 +44,12 @@ export default async function GamePage({ params }: GamePageProps) {
 
   if (!game) notFound();
 
-  // 3. Fetch current user's library entry (if logged in)
+  // 3. Fetch session-dependent data in parallel
   const session = await getServerSession(authOptions);
-  const libraryEntry = session?.user?.id
-    ? await getUserLibraryEntry(session.user.id, game.id)
-    : null;
+  const [libraryEntry, reviews] = await Promise.all([
+    session?.user?.id ? getUserLibraryEntry(session.user.id, game.id) : null,
+    getGameReviews(game.id),
+  ]);
 
   const genres = game.genres.map((gg) => gg.genre);
   const platforms = game.platforms.map((gp) => gp.platform);
@@ -194,78 +197,63 @@ export default async function GamePage({ params }: GamePageProps) {
         </div>
       </div>
 
-      {/* Tabs (static — Phase 3 adds client interactivity) */}
-      <div className="border-b border-subtle mb-8">
-        <nav className="flex gap-6" aria-label="Game sections">
-          {["About", "Reviews", "Discussions"].map((tab) => (
-            <span
-              key={tab}
-              className={`pb-3 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                tab === "About"
-                  ? "border-accent text-accent"
-                  : "border-transparent text-text-tertiary"
-              }`}
-            >
-              {tab}
-            </span>
-          ))}
-        </nav>
-      </div>
-
-      {/* About tab content */}
-      <div className="max-w-3xl">
-        {game.description ? (
-          <div className="space-y-6">
-            <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
-              {game.description}
-            </p>
-
-            <div className="border-t border-subtle pt-6">
-              <h2 className="text-text-primary font-semibold mb-4">Details</h2>
-              <dl className="grid grid-cols-2 gap-y-3">
-                {game.releaseDate && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Release Date</dt>
-                    <dd className="text-text-primary text-sm">{formatDate(game.releaseDate)}</dd>
-                  </>
-                )}
-                {game.developer && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Developer</dt>
-                    <dd className="text-text-primary text-sm">{game.developer}</dd>
-                  </>
-                )}
-                {game.publisher && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Publisher</dt>
-                    <dd className="text-text-primary text-sm">{game.publisher}</dd>
-                  </>
-                )}
-                {genres.length > 0 && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Genres</dt>
-                    <dd className="text-text-primary text-sm">{genres.map((g) => g.name).join(", ")}</dd>
-                  </>
-                )}
-                {platforms.length > 0 && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Platforms</dt>
-                    <dd className="text-text-primary text-sm">{platforms.map((p) => p.name).join(", ")}</dd>
-                  </>
-                )}
-                {game.isUserSubmitted && (
-                  <>
-                    <dt className="text-text-tertiary text-sm">Source</dt>
-                    <dd className="text-text-secondary text-sm">Community submission</dd>
-                  </>
-                )}
-              </dl>
+      <GameTabs
+        gameId={game.id}
+        reviews={reviews}
+        currentUserId={session?.user?.id}
+        about={
+          game.description ? (
+            <div className="space-y-6">
+              <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
+                {game.description}
+              </p>
+              <div className="border-t border-subtle pt-6">
+                <h2 className="text-text-primary font-semibold mb-4">Details</h2>
+                <dl className="grid grid-cols-2 gap-y-3">
+                  {game.releaseDate && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Release Date</dt>
+                      <dd className="text-text-primary text-sm">{formatDate(game.releaseDate)}</dd>
+                    </>
+                  )}
+                  {game.developer && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Developer</dt>
+                      <dd className="text-text-primary text-sm">{game.developer}</dd>
+                    </>
+                  )}
+                  {game.publisher && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Publisher</dt>
+                      <dd className="text-text-primary text-sm">{game.publisher}</dd>
+                    </>
+                  )}
+                  {genres.length > 0 && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Genres</dt>
+                      <dd className="text-text-primary text-sm">{genres.map((g) => g.name).join(", ")}</dd>
+                    </>
+                  )}
+                  {platforms.length > 0 && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Platforms</dt>
+                      <dd className="text-text-primary text-sm">{platforms.map((p) => p.name).join(", ")}</dd>
+                    </>
+                  )}
+                  {game.isUserSubmitted && (
+                    <>
+                      <dt className="text-text-tertiary text-sm">Source</dt>
+                      <dd className="text-text-secondary text-sm">Community submission</dd>
+                    </>
+                  )}
+                </dl>
+              </div>
             </div>
-          </div>
-        ) : (
-          <p className="text-text-tertiary text-sm">No description available.</p>
-        )}
-      </div>
+          ) : (
+            <p className="text-text-tertiary text-sm">No description available.</p>
+          )
+        }
+      />
     </main>
   );
 }

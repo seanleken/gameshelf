@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { LibraryStatus } from "@prisma/client";
 import { upsertLibraryEntry, deleteLibraryEntry } from "@/actions/library";
 
@@ -30,6 +31,7 @@ export function AddToShelfButton({ gameId, initialEntry }: AddToShelfButtonProps
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -51,10 +53,13 @@ export function AddToShelfButton({ gameId, initialEntry }: AddToShelfButtonProps
     setOpen(false);
     setEntry({ id: entry?.id ?? "pending", status, rating: entry?.rating ?? null });
 
+    const wasNew = !entry;
     startTransition(async () => {
       const result = await upsertLibraryEntry({ gameId, status, rating: entry?.rating });
       if (result.success) {
         setEntry({ id: result.entry.id, status: result.entry.status, rating: result.entry.rating });
+        // Refresh server data so InlineRating appears after first shelf add
+        if (wasNew) router.refresh();
       }
     });
   }
